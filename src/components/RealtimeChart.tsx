@@ -19,6 +19,7 @@ interface RealtimeChartProps {
   color: string;
   type?: "line" | "area";
   domain?: [number, number];
+  stats?: { avg: number; max: number; min: number };
 }
 
 export function RealtimeChart({
@@ -28,6 +29,7 @@ export function RealtimeChart({
   color,
   type = "line",
   domain,
+  stats,
 }: RealtimeChartProps) {
   const Chart = type === "area" ? AreaChart : LineChart;
   const DataComponent = type === "area" ? Area : Line;
@@ -102,6 +104,13 @@ export function RealtimeChart({
           </Chart>
         </ResponsiveContainer>
       </div>
+      {stats && (
+        <div className="mt-3 pt-3 border-t border-surface-800 flex items-center gap-4 text-[10px] font-mono">
+          <span className="text-surface-500">Prom <span className="text-surface-300">{stats.avg.toFixed(1)}</span></span>
+          <span className="text-surface-500">Máx <span className="text-danger-400">{stats.max.toFixed(1)}</span></span>
+          <span className="text-surface-500">Mín <span className="text-primary-400">{stats.min.toFixed(1)}</span></span>
+        </div>
+      )}
     </div>
   );
 }
