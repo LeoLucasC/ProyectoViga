@@ -2,9 +2,12 @@
 set -e
 
 echo "⏳ Esperando a que PostgreSQL esté listo..."
-until pg_isready -h "$(echo $DATABASE_URL | sed 's/.*@//' | sed 's/:.*//')" -U vigamonitor -d vigamonitor; do
+
+# Usamos directamente 'db' como host, mucho más seguro y simple
+until pg_isready -h db -U vigamonitor -d vigamonitor; do
   sleep 1
 done
+
 echo "✅ PostgreSQL está listo"
 
 echo "🌱 Ejecutando seed de base de datos..."
