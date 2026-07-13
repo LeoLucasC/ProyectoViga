@@ -8,10 +8,14 @@ type Page = "dashboard" | "historial" | "settings";
 export function Layout({
   activePage,
   onNavigate,
+  onLogout,
+  selectedViga,
   children,
 }: {
   activePage: Page;
   onNavigate: (page: Page) => void;
+  onLogout: () => void;
+  selectedViga: { viga_id: number; nombre: string } | null;
   children: ReactNode;
 }) {
   const { connectionStatus } = useTelemetry();
@@ -26,7 +30,7 @@ export function Layout({
         onToggle={() => setMobileOpen(false)}
       />
       <div className="flex-1 flex flex-col overflow-hidden">
-        <Header connectionStatus={connectionStatus}>
+        <Header connectionStatus={connectionStatus} onLogout={onLogout} selectedViga={selectedViga}>
           <MenuButton onClick={() => setMobileOpen((v) => !v)} />
         </Header>
         <main className="flex-1 overflow-y-auto p-4 lg:p-6 pb-20 lg:pb-6">

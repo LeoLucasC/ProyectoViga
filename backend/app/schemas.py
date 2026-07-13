@@ -11,6 +11,20 @@ class TelemetryReading(BaseModel):
     sensor_tipo: str = Field(pattern=r"^(distancia|vibracion)$")
     valor: float
     unidad: str = "mm"
+    viga_id: int | None = None
+    # Parámetros completos de vibración (MPU9250) — opcionales
+    ax: float | None = None
+    ay: float | None = None
+    az: float | None = None
+    adx: float | None = None
+    ady: float | None = None
+    adz: float | None = None
+    aver: float | None = None
+    gx: float | None = None
+    gy: float | None = None
+    gz: float | None = None
+    temp: float | None = None
+    evento: int | None = None
 
 
 class TelemetryResponse(BaseModel):
@@ -64,3 +78,42 @@ class SensorResponse(BaseModel):
     latest_valor: float | None = None
     latest_unidad: str | None = None
     latest_time: datetime | None = None
+
+
+# ── Viga schemas ──
+
+class VigaResponse(BaseModel):
+    viga_id: int
+    nombre: str
+    ubicacion: str
+    created_at: datetime
+
+
+class VigaCreate(BaseModel):
+    nombre: str = Field(max_length=200)
+    ubicacion: str = Field(max_length=200)
+
+
+class VigaUpdate(BaseModel):
+    nombre: str = Field(max_length=200)
+    ubicacion: str = Field(max_length=200)
+
+
+# ── Auth schemas ──
+
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
+
+class LoginResponse(BaseModel):
+    token: str
+    username: str
+    message: str = "Inicio de sesión exitoso"
+
+
+class UserResponse(BaseModel):
+    id: int
+    username: str
+    email: str
+    created_at: datetime

@@ -1,5 +1,5 @@
 import { type ReactNode } from "react";
-import { Wifi, WifiOff, RefreshCw } from "lucide-react";
+import { Wifi, WifiOff, RefreshCw, LogOut } from "lucide-react";
 import type { ConnectionStatus } from "../types/telemetry";
 
 function statusConfig(status: ConnectionStatus) {
@@ -27,9 +27,13 @@ function statusConfig(status: ConnectionStatus) {
 
 export function Header({
   connectionStatus,
+  onLogout,
+  selectedViga,
   children,
 }: {
   connectionStatus: ConnectionStatus;
+  onLogout?: () => void;
+  selectedViga?: { viga_id: number; nombre: string } | null;
   children?: ReactNode;
 }) {
   const { Icon, label, className } = statusConfig(connectionStatus);
@@ -38,19 +42,39 @@ export function Header({
     <header className="h-16 bg-surface-900/80 backdrop-blur-md border-b border-surface-800 px-4 lg:px-6 flex items-center justify-between shrink-0 gap-3">
       <div className="flex items-center gap-3">
         {children}
-        <h2 className="text-white font-semibold text-lg">VigaMonitor</h2>
+        <div>
+          <h2 className="text-white font-semibold text-lg">VigaMonitor</h2>
+          {selectedViga && (
+            <p className="text-primary-400 text-xs font-medium leading-tight">
+              {selectedViga.nombre}
+            </p>
+          )}
+        </div>
       </div>
 
-      <div
-        className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm font-medium transition-all duration-300 ${className} shrink-0`}
-      >
-        <Icon
-          size={16}
-          className={
-            connectionStatus === "reconnecting" ? "animate-spin" : undefined
-          }
-        />
-        <span className="text-xs hidden sm:inline">{label}</span>
+      <div className="flex items-center gap-3">
+        <div
+          className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm font-medium transition-all duration-300 ${className} shrink-0`}
+        >
+          <Icon
+            size={16}
+            className={
+              connectionStatus === "reconnecting" ? "animate-spin" : undefined
+            }
+          />
+          <span className="text-xs hidden sm:inline">{label}</span>
+        </div>
+
+        {onLogout && (
+          <button
+            onClick={onLogout}
+            title="Cerrar sesión"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-surface-400 hover:text-danger-400 hover:bg-danger-400/10 transition-all duration-200 text-sm"
+          >
+            <LogOut size={16} />
+            <span className="hidden sm:inline">Salir</span>
+          </button>
+        )}
       </div>
     </header>
   );

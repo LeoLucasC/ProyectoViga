@@ -25,7 +25,7 @@ export function ConexionTab() {
         <div className="flex items-center justify-between py-2">
           <span className="text-surface-400 text-sm">Servidor</span>
           <code className="text-surface-200 text-sm font-mono bg-surface-800 px-3 py-1 rounded-md">
-            ws://localhost:8000/ws/telemetria
+            ws://${window.location.host}/ws/telemetria
           </code>
         </div>
         <div className="flex items-center justify-between py-2">

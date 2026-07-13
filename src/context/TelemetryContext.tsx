@@ -87,7 +87,7 @@ export function TelemetryProvider({ children }: { children: ReactNode }) {
 
   const refreshThresholds = useCallback(async () => {
     try {
-      const res = await fetch("http://localhost:8000/api/thresholds");
+      const res = await fetch("/api/thresholds");
       const data = await res.json();
       if (Array.isArray(data) && data.length > 0) {
         const d = data.find((t: any) => t.sensor_tipo === "distancia");
@@ -174,8 +174,9 @@ export function TelemetryProvider({ children }: { children: ReactNode }) {
     setState((prev) => ({ ...prev, connectionStatus: status }));
   }, []);
 
+  const wsUrl = `${window.location.protocol === "https:" ? "wss:" : "ws:"}//${window.location.host}/ws/telemetria`;
   useWebSocket({
-    url: "ws://localhost:8000/ws/telemetria",
+    url: wsUrl,
     onMessage: handleMessage,
     onStatusChange: handleStatusChange,
   });

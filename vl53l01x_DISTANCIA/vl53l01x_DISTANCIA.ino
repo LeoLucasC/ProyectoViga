@@ -15,7 +15,7 @@ const char* WIFI_PASSWORD = "1371928L";
 // CONFIGURACIÓN DEL BACKEND
 // ======================================================
 
-const char* API_URL = "http://192.168.1.101:8000/api/telemetry";
+const char* API_URL = "http://192.168.1.102:8000/api/telemetry";
 const char* SENSOR_ID = "bridge-01";
 const char* SENSOR_TIPO = "distancia";
 const char* UNIDAD = "mm";

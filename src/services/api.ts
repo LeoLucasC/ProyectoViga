@@ -1,6 +1,6 @@
-import type { SensorCreate, SensorResponse, SensorUpdate, Threshold } from "../types/telemetry";
+import type { SensorCreate, SensorResponse, SensorUpdate, Threshold, Viga } from "../types/telemetry";
 
-const BASE = "http://localhost:8000/api";
+const BASE = "/api";
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
@@ -34,8 +34,22 @@ export const updateThreshold = (data: Threshold) =>
 // History
 export interface HistoryPoint {
   timestamp: number;
+  sensor_id: string;
   valor: number;
   sensor_tipo: "distancia" | "vibracion";
+  // Parámetros detallados de vibración (opcionales)
+  ax?: number;
+  ay?: number;
+  az?: number;
+  adx?: number;
+  ady?: number;
+  adz?: number;
+  aver?: number;
+  gx?: number;
+  gy?: number;
+  gz?: number;
+  temp?: number;
+  evento?: number;
 }
 
 export interface HistoryResponse {
@@ -43,14 +57,29 @@ export interface HistoryResponse {
   total: number;
 }
 
-export const getHistory = (params?: { sensor_tipo?: string; limit?: number; since?: string }) => {
+export const getHistory = (params?: {
+  sensor_tipo?: string;
+  viga_id?: number;
+  limit?: number;
+  since?: string;
+}) => {
   const search = new URLSearchParams();
   if (params?.sensor_tipo) search.set("sensor_tipo", params.sensor_tipo);
+  if (params?.viga_id) search.set("viga_id", String(params.viga_id));
   if (params?.limit) search.set("limit", String(params.limit));
   if (params?.since) search.set("since", params.since);
   const qs = search.toString();
   return request<HistoryResponse>(`/history${qs ? `?${qs}` : ""}`);
 };
+
+// Vigas (CRUD)
+export const getVigas = () => request<Viga[]>("/vigas");
+export const createViga = (data: { nombre: string; ubicacion: string }) =>
+  request<Viga>("/vigas", { method: "POST", body: JSON.stringify(data) });
+export const updateViga = (vigaId: number, data: { nombre: string; ubicacion: string }) =>
+  request<Viga>(`/vigas/${vigaId}`, { method: "PUT", body: JSON.stringify(data) });
+export const deleteViga = (vigaId: number) =>
+  request<{ status: string; message: string }>(`/vigas/${vigaId}`, { method: "DELETE" });
 
 // Reset
 export const resetTelemetry = () =>

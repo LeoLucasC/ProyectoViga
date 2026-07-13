@@ -3,16 +3,18 @@ import { useState } from "react";
 import { SensoresTab } from "../components/SensoresTab";
 import { UmbralesTab } from "../components/UmbralesTab";
 import { ConexionTab } from "../components/ConexionTab";
+import { VigasTab } from "../components/VigasTab";
 import type { TabId } from "../types/telemetry";
 
 const tabs: { id: TabId; label: string }[] = [
+  { id: "vigas", label: "Vigas" },
   { id: "sensores", label: "Sensores" },
   { id: "umbrales", label: "Umbrales" },
   { id: "conexion", label: "Conexión" },
 ];
 
 export function SettingsPage() {
-  const [activeTab, setActiveTab] = useState<TabId>("sensores");
+  const [activeTab, setActiveTab] = useState<TabId>("vigas");
 
   return (
     <div className="space-y-6 max-w-3xl">
@@ -40,6 +42,7 @@ export function SettingsPage() {
 
       {/* Tab Content */}
       <div className="min-h-[200px]">
+        {activeTab === "vigas" && <VigasTab />}
         {activeTab === "sensores" && <SensoresTab />}
         {activeTab === "umbrales" && <UmbralesTab />}
         {activeTab === "conexion" && <ConexionTab />}

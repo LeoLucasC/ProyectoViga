@@ -1,8 +1,107 @@
 """Raw SQL queries for telemetry data."""
 
+import hashlib
+import os
 from datetime import datetime, timezone
 
 import asyncpg
+
+
+# ── Password helpers ──
+
+def hash_password(password: str) -> str:
+    salt = os.urandom(32).hex()
+    pwd_hash = hashlib.sha256((salt + password).encode()).hexdigest()
+    return f"{salt}${pwd_hash}"
+
+
+def verify_password(password: str, stored: str) -> bool:
+    salt, pwd_hash = stored.split("$")
+    return hashlib.sha256((salt + password).encode()).hexdigest() == pwd_hash
+
+
+# ── User queries ──
+
+async def create_users_table(conn: asyncpg.Connection) -> None:
+    await conn.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            id          SERIAL PRIMARY KEY,
+            username    VARCHAR(100) UNIQUE NOT NULL,
+            email       VARCHAR(200) UNIQUE NOT NULL,
+            password    VARCHAR(255) NOT NULL,
+            created_at  TIMESTAMPTZ DEFAULT NOW()
+        )
+    """)
+
+
+async def seed_default_user(conn: asyncpg.Connection) -> None:
+    exists = await conn.fetchval("SELECT 1 FROM users WHERE username = 'admin'")
+    if not exists:
+        await conn.execute(
+            "INSERT INTO users (username, email, password) VALUES ($1, $2, $3)",
+            "admin", "admin@vigamonitor.com", hash_password("admin123"),
+        )
+        print("✓ Usuario admin creado (admin / admin123)")
+
+
+# ── Viga queries ──
+
+async def get_all_vigas(conn: asyncpg.Connection) -> list[dict]:
+    rows = await conn.fetch(
+        "SELECT viga_id, nombre, ubicacion, created_at FROM vigas ORDER BY created_at DESC"
+    )
+    return [dict(r) for r in rows]
+
+
+async def get_viga_by_id(conn: asyncpg.Connection, viga_id: int) -> dict | None:
+    row = await conn.fetchrow(
+        "SELECT viga_id, nombre, ubicacion, created_at FROM vigas WHERE viga_id = $1",
+        viga_id,
+    )
+    return dict(row) if row else None
+
+
+async def create_viga(conn: asyncpg.Connection, nombre: str, ubicacion: str) -> dict:
+    row = await conn.fetchrow(
+        "INSERT INTO vigas (nombre, ubicacion) VALUES ($1, $2) RETURNING *",
+        nombre, ubicacion,
+    )
+    return dict(row)
+
+
+async def update_viga(conn: asyncpg.Connection, viga_id: int, nombre: str, ubicacion: str) -> dict | None:
+    row = await conn.fetchrow(
+        "UPDATE vigas SET nombre = $1, ubicacion = $2 WHERE viga_id = $3 RETURNING *",
+        nombre, ubicacion, viga_id,
+    )
+    return dict(row) if row else None
+
+
+async def delete_viga(conn: asyncpg.Connection, viga_id: int) -> bool:
+    await conn.execute("UPDATE telemetry_readings SET viga_id = NULL WHERE viga_id = $1", viga_id)
+    result = await conn.execute("DELETE FROM vigas WHERE viga_id = $1", viga_id)
+    return result.endswith(" 1")
+
+
+async def get_user_by_username(conn: asyncpg.Connection, username: str) -> dict | None:
+    row = await conn.fetchrow("SELECT * FROM users WHERE username = $1", username)
+    return dict(row) if row else None
+
+
+async def ensure_sensor_exists(conn: asyncpg.Connection, sensor_id: str, sensor_tipo: str) -> None:
+    """Create the sensor if it doesn't exist yet (auto-register on first reading)."""
+    exists = await conn.fetchval(
+        "SELECT 1 FROM sensors WHERE sensor_id = $1", sensor_id
+    )
+    if not exists:
+        await conn.execute(
+            """
+            INSERT INTO sensors (sensor_id, sensor_tipo, nombre, ubicacion)
+            VALUES ($1, $2, $3, $4)
+            ON CONFLICT (sensor_id) DO NOTHING
+            """,
+            sensor_id, sensor_tipo, f"Sensor {sensor_id}", "Ubicación automática",
+        )
 
 
 async def insert_reading(
@@ -12,14 +111,38 @@ async def insert_reading(
     valor: float,
     unidad: str,
     timestamp: datetime | None = None,
+    viga_id: int | None = None,
+    ax: float | None = None,
+    ay: float | None = None,
+    az: float | None = None,
+    adx: float | None = None,
+    ady: float | None = None,
+    adz: float | None = None,
+    aver: float | None = None,
+    gx: float | None = None,
+    gy: float | None = None,
+    gz: float | None = None,
+    temp: float | None = None,
+    evento: int | None = None,
 ) -> None:
     ts = timestamp or datetime.now(timezone.utc)
+    await ensure_sensor_exists(conn, sensor_id, sensor_tipo)
+    if viga_id is None:
+        first = await conn.fetchval("SELECT viga_id FROM vigas ORDER BY viga_id LIMIT 1")
+        viga_id = first
     await conn.execute(
         """
-        INSERT INTO telemetry_readings (time, sensor_id, sensor_tipo, valor, unidad)
-        VALUES ($1, $2, $3, $4, $5)
+        INSERT INTO telemetry_readings
+            (time, sensor_id, sensor_tipo, valor, unidad, viga_id,
+             ax, ay, az, adx, ady, adz, aver,
+             gx, gy, gz, temp, evento)
+        VALUES ($1, $2, $3, $4, $5, $6,
+                $7, $8, $9, $10, $11, $12, $13,
+                $14, $15, $16, $17, $18)
         """,
-        ts, sensor_id, sensor_tipo, valor, unidad,
+        ts, sensor_id, sensor_tipo, valor, unidad, viga_id,
+        ax, ay, az, adx, ady, adz, aver,
+        gx, gy, gz, temp, evento,
     )
 
 
@@ -40,10 +163,14 @@ async def get_latest_readings(
 async def get_history(
     conn: asyncpg.Connection,
     sensor_tipo: str | None = None,
+    viga_id: int | None = None,
     limit: int = 50,
     since: datetime | None = None,
 ) -> list[dict]:
-    query = "SELECT time, sensor_tipo, valor FROM telemetry_readings WHERE 1=1"
+    query = """SELECT time, sensor_id, sensor_tipo, valor, unidad, viga_id,
+                      ax, ay, az, adx, ady, adz, aver,
+                      gx, gy, gz, temp, evento
+               FROM telemetry_readings WHERE 1=1"""
     params: list = []
     idx = 0
 
@@ -51,6 +178,10 @@ async def get_history(
         idx += 1
         query += f" AND sensor_tipo = ${idx}"
         params.append(sensor_tipo)
+    if viga_id is not None:
+        idx += 1
+        query += f" AND viga_id = ${idx}"
+        params.append(viga_id)
     if since:
         idx += 1
         query += f" AND time >= ${idx}"

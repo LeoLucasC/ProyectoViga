@@ -104,6 +104,35 @@ async def seed() -> None:
             """)
             logging.info("✓ Tabla: telemetry_readings")
 
+            # --- Vigas table (debe ir ANTES de agregar viga_id FK) ---
+            await conn.execute("""
+                CREATE TABLE IF NOT EXISTS vigas (
+                    viga_id    SERIAL PRIMARY KEY,
+                    nombre     VARCHAR(200) NOT NULL,
+                    ubicacion  VARCHAR(200) NOT NULL,
+                    created_at TIMESTAMPTZ DEFAULT NOW()
+                )
+            """)
+            logging.info("✓ Tabla: vigas")
+
+            # Add viga_id column + FK (solo si no existe)
+            await conn.execute("""
+                ALTER TABLE telemetry_readings
+                ADD COLUMN IF NOT EXISTS viga_id INTEGER REFERENCES vigas(viga_id)
+            """)
+            logging.info("✓ Columna viga_id + FK agregada")
+
+            # Add vibration detail columns (solo si no existen)
+            for col in ["ax", "ay", "az", "adx", "ady", "adz", "aver", "gx", "gy", "gz", "temp"]:
+                await conn.execute(
+                    f'ALTER TABLE telemetry_readings ADD COLUMN IF NOT EXISTS "{col}" DOUBLE PRECISION'
+                )
+            # evento es INTEGER
+            await conn.execute(
+                'ALTER TABLE telemetry_readings ADD COLUMN IF NOT EXISTS "evento" INTEGER'
+            )
+            logging.info("✓ Columnas de vibración detallada agregadas")
+
             # --- Hypertable ---
             try:
                 await conn.execute(
@@ -122,6 +151,10 @@ async def seed() -> None:
             await conn.execute("""
                 CREATE INDEX IF NOT EXISTS idx_readings_sensor_id_time
                     ON telemetry_readings (sensor_id, time DESC)
+            """)
+            await conn.execute("""
+                CREATE INDEX IF NOT EXISTS idx_readings_viga_id_time
+                    ON telemetry_readings (viga_id, time DESC)
             """)
             logging.info("✓ Índices creados")
 
@@ -144,6 +177,16 @@ async def seed() -> None:
                 ON CONFLICT (sensor_id) DO NOTHING
             """)
             logging.info("✓ Sensores inyectados")
+
+            # --- Seed vigas ---
+            await conn.execute("""
+                INSERT INTO vigas (nombre, ubicacion)
+                VALUES
+                    ('Viga Principal Puente 1', 'Tramo central - Río Bravo'),
+                    ('Viga Secundaria Acceso Norte', 'Acceso norte - Estribo A')
+                ON CONFLICT (viga_id) DO NOTHING
+            """)
+            logging.info("✓ Vigas inyectadas")
 
             logging.info("✅ ¡Base de datos preparada y sembrada con éxito!")
 

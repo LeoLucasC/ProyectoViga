@@ -17,7 +17,7 @@ const char SENSOR_ID[] = "MPU_IZQUIERDO";
 // =====================================================
 const char* WIFI_SSID = "LEOYJHON";
 const char* WIFI_PASSWORD = "1371928L";
-const char* API_URL = "http://192.168.1.101:8000/api/telemetry";
+const char* API_URL = "http://192.168.1.102:8000/api/telemetry";
 const char* SENSOR_TIPO = "vibracion";
 const char* UNIDAD = "m/s²";
 const unsigned long INTERVALO_ENVIO_MS = 1000; // cada 1 segundo
@@ -266,9 +266,14 @@ void medirRuidoBase() {
 }
 
 // ------------------------------------------------------
-// Enviar aceleración al backend vía HTTP POST
+// Enviar todos los parámetros al backend vía HTTP POST
 // ------------------------------------------------------
-void enviarLectura(float aceleracion) {
+void enviarLectura(
+  float aceleracion, float ax, float ay, float az,
+  float adx, float ady, float adz,
+  float gx, float gy, float gz,
+  float temperatura, bool evento
+) {
 
   if (WiFi.status() != WL_CONNECTED) {
     Serial.println("# WiFi desconectado, no se envia dato");
@@ -279,11 +284,28 @@ void enviarLectura(float aceleracion) {
   http.begin(API_URL);
   http.addHeader("Content-Type", "application/json");
 
-  StaticJsonDocument<256> doc;
+  StaticJsonDocument<512> doc;
   doc["sensor_id"] = SENSOR_ID;
   doc["sensor_tipo"] = SENSOR_TIPO;
   doc["valor"] = round(aceleracion * 1000.0) / 1000.0;
   doc["unidad"] = UNIDAD;
+
+  doc["ax"] = round(ax * 10000.0) / 10000.0;
+  doc["ay"] = round(ay * 10000.0) / 10000.0;
+  doc["az"] = round(az * 10000.0) / 10000.0;
+
+  doc["adx"] = round(adx * 10000.0) / 10000.0;
+  doc["ady"] = round(ady * 10000.0) / 10000.0;
+  doc["adz"] = round(adz * 10000.0) / 10000.0;
+
+  doc["aver"] = round(aceleracion * 10000.0) / 10000.0;
+
+  doc["gx"] = round(gx * 100000.0) / 100000.0;
+  doc["gy"] = round(gy * 100000.0) / 100000.0;
+  doc["gz"] = round(gz * 100000.0) / 100000.0;
+
+  doc["temp"] = round(temperatura * 100.0) / 100.0;
+  doc["evento"] = evento ? 1 : 0;
 
   String body;
   serializeJson(doc, body);
@@ -523,6 +545,12 @@ void loop() {
   unsigned long ahora = millis();
   if (ahora - ultimoEnvio >= INTERVALO_ENVIO_MS) {
     ultimoEnvio = ahora;
-    enviarLectura(aceleracionVertical);
+    enviarLectura(
+      aceleracionVertical,
+      Ax, Ay, Az,
+      Adx, Ady, Adz,
+      Gx, Gy, Gz,
+      temperatura, evento
+    );
   }
 }

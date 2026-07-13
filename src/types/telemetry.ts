@@ -69,4 +69,13 @@ export interface Threshold {
   critical_valor: number;
 }
 
-export type TabId = "sensores" | "umbrales" | "conexion";
+export type TabId = "sensores" | "umbrales" | "conexion" | "vigas";
+
+// ── Viga types ──
+
+export interface Viga {
+  viga_id: number;
+  nombre: string;
+  ubicacion: string;
+  created_at: string;
+}

@@ -25,14 +25,6 @@ function formatDateShort(ts: number): string {
   });
 }
 
-function toCsv(points: HistoryPoint[]): string {
-  const header = "timestamp,sensor_tipo,valor";
-  const rows = points.map(
-    (p) => `${new Date(p.timestamp).toISOString()},${p.sensor_tipo},${p.valor}`
-  );
-  return [header, ...rows].join("\n");
-}
-
 function getReadingStatus(
   valor: number,
   tipo: SensorType,
@@ -73,8 +65,11 @@ export function HistorialPage() {
     setLoading(true);
     setError("");
     try {
+      const storedViga = localStorage.getItem("viga_selected");
+      const selectedViga = storedViga ? JSON.parse(storedViga) : null;
+
       const [historyRes, thresholdsRes] = await Promise.all([
-        getHistory({ limit: filterLimit }),
+        getHistory({ limit: filterLimit, viga_id: selectedViga?.viga_id }),
         getThresholds(),
       ]);
       setAllData(historyRes.data);
@@ -92,8 +87,33 @@ export function HistorialPage() {
   }, [fetchData]);
 
   const handleExport = () => {
-    const csv = toCsv(filtered);
-    const blob = new Blob([csv], { type: "text/csv" });
+    if (filtered.length === 0) return;
+
+    const header = [
+      "timestamp", "sensor_id", "sensor_tipo", "valor",
+      "ax (m/s²)", "ay (m/s²)", "az (m/s²)",
+      "adx (m/s²)", "ady (m/s²)", "adz (m/s²)", "aver (m/s²)",
+      "gx (rad/s)", "gy (rad/s)", "gz (rad/s)",
+      "temp (°C)", "evento",
+    ].join(",");
+
+    const rows = filtered.map((p) => {
+      return [
+        new Date(p.timestamp).toISOString(),
+        p.sensor_id,
+        p.sensor_tipo,
+        p.valor ?? "",
+        p.ax ?? "", p.ay ?? "", p.az ?? "",
+        p.adx ?? "", p.ady ?? "", p.adz ?? "", p.aver ?? "",
+        p.gx ?? "", p.gy ?? "", p.gz ?? "",
+        p.temp ?? "", p.evento ?? "",
+      ].join(",");
+    });
+
+    const BOM = "\uFEFF";
+    const csv = BOM + [header, ...rows].join("\n");
+
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -181,10 +201,11 @@ export function HistorialPage() {
           onChange={(e) => setFilterLimit(Number(e.target.value))}
           className="bg-surface-800 border border-surface-700 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-primary-500"
         >
-          <option value={50}>50 lecturas</option>
-          <option value={100}>100 lecturas</option>
-          <option value={200}>200 lecturas</option>
-          <option value={500}>500 lecturas</option>
+          <option value={100}>Últimas 100 lecturas</option>
+          <option value={500}>Últimas 500 lecturas</option>
+          <option value={1000}>Últimas 1,000 lecturas</option>
+          <option value={5000}>Últimas 5,000 lecturas</option>
+          <option value={10000}>Últimas 10,000 lecturas</option>
         </select>
         {error && <span className="text-danger-400 text-xs">{error}</span>}
       </div>
@@ -208,8 +229,8 @@ export function HistorialPage() {
                 <tr className="border-b border-surface-800 text-surface-400 text-xs uppercase tracking-wider">
                   <th className="text-left px-5 py-3 font-medium">#</th>
                   <th className="text-left px-5 py-3 font-medium">Hora</th>
-                  <th className="text-left px-5 py-3 font-medium">Sensor</th>
-                  <th className="text-center px-5 py-3 font-medium">Tipo</th>
+                  <th className="text-left px-5 py-3 font-medium">Sensor ID</th>
+                  <th className="text-left px-5 py-3 font-medium">Tipo</th>
                   <th className="text-right px-5 py-3 font-medium">Valor</th>
                   <th className="text-right px-5 py-3 font-medium">Estado</th>
                 </tr>
@@ -235,6 +256,9 @@ export function HistorialPage() {
                       </td>
                       <td className="px-5 py-2.5 font-mono text-surface-300 text-xs">
                         {formatDate(point.timestamp)}
+                      </td>
+                      <td className="px-5 py-2.5 font-mono text-xs text-surface-400">
+                        {point.sensor_id}
                       </td>
                       <td className="px-5 py-2.5">
                         <span

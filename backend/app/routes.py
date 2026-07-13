@@ -1,5 +1,6 @@
 """REST API endpoints for VigaMonitor."""
 
+import secrets
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, HTTPException, Query
@@ -8,18 +9,27 @@ from pydantic import BaseModel
 from app.database import get_pool
 from app import models
 from app.schemas import (
+    LoginRequest,
+    LoginResponse,
     SensorCreate,
     SensorResponse,
     SensorUpdate,
     TelemetryReading,
     TelemetryResponse,
     Threshold,
+    VigaCreate,
+    VigaResponse,
+    VigaUpdate,
 )
 from app.ws_manager import manager
 
 # ── Sensor status constants ──
 
 SENSOR_ONLINE_SECONDS = 30
+
+# ── In-memory token store ──
+# token -> username
+_active_tokens: dict[str, str] = {}
 
 
 class BatchTelemetry(BaseModel):
@@ -44,7 +54,8 @@ async def latest():
 @router.get("/history")
 async def history(
     sensor_tipo: str | None = Query(None, pattern=r"^(distancia|vibracion)?$"),
-    limit: int = Query(50, ge=1, le=500),
+    viga_id: int | None = Query(None, ge=1),
+    limit: int = Query(100, ge=1, le=10000),
     since: str | None = None,
 ):
     since_dt: datetime | None = None
@@ -56,16 +67,22 @@ async def history(
 
     pool = await get_pool()
     async with pool.acquire() as conn:
-        rows = await models.get_history(conn, sensor_tipo or None, limit, since_dt)
+        rows = await models.get_history(conn, sensor_tipo or None, viga_id, limit, since_dt)
 
-    points = [
-        {
+    points = []
+    for r in rows:
+        point = {
             "timestamp": int(r["time"].timestamp() * 1000),
+            "sensor_id": r["sensor_id"],
             "valor": r["valor"],
             "sensor_tipo": r["sensor_tipo"],
         }
-        for r in rows
-    ]
+        # Incluir parámetros detallados de vibración si existen
+        for field in ["ax","ay","az","adx","ady","adz","aver","gx","gy","gz","temp","evento"]:
+            val = r.get(field)
+            if val is not None:
+                point[field] = val
+        points.append(point)
     return {"data": points, "total": len(points)}
 
 
@@ -102,6 +119,11 @@ async def post_telemetry(reading: TelemetryReading):
             valor=reading.valor,
             unidad=reading.unidad,
             timestamp=reading.timestamp,
+            viga_id=reading.viga_id,
+            ax=reading.ax, ay=reading.ay, az=reading.az,
+            adx=reading.adx, ady=reading.ady, adz=reading.adz, aver=reading.aver,
+            gx=reading.gx, gy=reading.gy, gz=reading.gz,
+            temp=reading.temp, evento=reading.evento,
         )
 
     ts = reading.timestamp or datetime.now(timezone.utc)
@@ -129,6 +151,11 @@ async def post_telemetry_batch(batch: BatchTelemetry):
                 valor=reading.valor,
                 unidad=reading.unidad,
                 timestamp=reading.timestamp,
+                viga_id=reading.viga_id,
+                ax=reading.ax, ay=reading.ay, az=reading.az,
+                adx=reading.adx, ady=reading.ady, adz=reading.adz, aver=reading.aver,
+                gx=reading.gx, gy=reading.gy, gz=reading.gz,
+                temp=reading.temp, evento=reading.evento,
             )
             ts = reading.timestamp or datetime.now(timezone.utc)
             response = TelemetryResponse(
@@ -148,6 +175,86 @@ async def reset_data():
     async with pool.acquire() as conn:
         await models.reset_data(conn)
     return {"status": "ok", "message": "All telemetry data deleted"}
+
+
+# ── Auth endpoints ──
+
+
+@router.post("/login")
+async def login(data: LoginRequest):
+    pool = await get_pool()
+    async with pool.acquire() as conn:
+        user = await models.get_user_by_username(conn, data.username)
+
+    if not user or not models.verify_password(data.password, user["password"]):
+        raise HTTPException(401, "Usuario o contraseña incorrectos")
+
+    token = secrets.token_hex(32)
+    _active_tokens[token] = user["username"]
+
+    return LoginResponse(token=token, username=user["username"])
+
+
+@router.get("/me")
+async def me(token: str = Query(...)):
+    username = _active_tokens.get(token)
+    if not username:
+        raise HTTPException(401, "Token inválido o expirado")
+
+    pool = await get_pool()
+    async with pool.acquire() as conn:
+        user = await models.get_user_by_username(conn, username)
+
+    if not user:
+        raise HTTPException(404, "Usuario no encontrado")
+
+    return {"username": user["username"], "email": user["email"]}
+
+
+@router.post("/logout")
+async def logout(token: str = Query(...)):
+    if token in _active_tokens:
+        del _active_tokens[token]
+    return {"status": "ok", "message": "Sesión cerrada"}
+
+
+# ── Viga endpoints ──
+
+
+@router.get("/vigas", response_model=list[VigaResponse])
+async def list_vigas():
+    pool = await get_pool()
+    async with pool.acquire() as conn:
+        raw = await models.get_all_vigas(conn)
+    return [VigaResponse(**r) for r in raw]
+
+
+@router.post("/vigas", status_code=201, response_model=VigaResponse)
+async def create_viga(data: VigaCreate):
+    pool = await get_pool()
+    async with pool.acquire() as conn:
+        created = await models.create_viga(conn, data.nombre, data.ubicacion)
+    return VigaResponse(**created)
+
+
+@router.put("/vigas/{viga_id}", response_model=VigaResponse)
+async def update_viga(viga_id: int, data: VigaUpdate):
+    pool = await get_pool()
+    async with pool.acquire() as conn:
+        updated = await models.update_viga(conn, viga_id, data.nombre, data.ubicacion)
+        if not updated:
+            raise HTTPException(404, f"Viga '{viga_id}' no encontrada")
+    return VigaResponse(**updated)
+
+
+@router.delete("/vigas/{viga_id}")
+async def delete_viga(viga_id: int):
+    pool = await get_pool()
+    async with pool.acquire() as conn:
+        deleted = await models.delete_viga(conn, viga_id)
+    if not deleted:
+        raise HTTPException(404, f"Viga '{viga_id}' no encontrada")
+    return {"status": "ok", "message": f"Viga '{viga_id}' eliminada"}
 
 
 # ── Sensor endpoints ──

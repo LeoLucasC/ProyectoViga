@@ -63,6 +63,11 @@ async def ws_telemetria(websocket: WebSocket):
                     valor=reading.valor,
                     unidad=reading.unidad,
                     timestamp=reading.timestamp,
+                    viga_id=reading.viga_id,
+                    ax=reading.ax, ay=reading.ay, az=reading.az,
+                    adx=reading.adx, ady=reading.ady, adz=reading.adz, aver=reading.aver,
+                    gx=reading.gx, gy=reading.gy, gz=reading.gz,
+                    temp=reading.temp, evento=reading.evento,
                 )
 
             # Broadcast a todos los clientes conectados
