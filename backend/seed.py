@@ -1,51 +1,19 @@
 import asyncio
 import asyncpg
 import logging
-from urllib.parse import urlparse
 from app.config import settings
 
-# 1. Configurar los logs para ver el detalle de la conexión
+# Configurar los logs para ver el detalle de la conexión
 logging.basicConfig(
     level=logging.DEBUG, 
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
 
-async def create_database(conn: asyncpg.Connection, db_name: str) -> None:
-    """Create database if it doesn't exist."""
-    exists = await conn.fetchval(
-        "SELECT 1 FROM pg_database WHERE datname = $1", db_name
-    )
-    if not exists:
-        await conn.execute(f'CREATE DATABASE "{db_name}"')
-        logging.info(f"✓ Base de datos '{db_name}' creada.")
-    else:
-        logging.info(f"- La base de datos '{db_name}' ya existe.")
-
 async def seed() -> None:
     dsn = str(settings.database_dsn)
     
-    # 2. Reemplazo seguro del nombre de la BD manteniendo los parámetros (como ?ssl=disable)
-    parsed = urlparse(dsn)
-    admin_dsn = dsn.replace(parsed.path, "/postgres")
-
-    logging.info("🔌 Fase 1: Conectando a PostgreSQL (Administrador)...")
-    logging.debug(f"DSN original: {dsn}")
-    logging.debug(f"Admin DSN: {admin_dsn}")
-
-    # FASE 1: CREAR BASE DE DATOS
-    try:
-        admin_conn = await asyncpg.connect(admin_dsn)
-        try:
-            await create_database(admin_conn, "vigamonitor")
-        finally:
-            await admin_conn.close()
-    except Exception as e:
-        logging.error(f"❌ Falló la conexión de administrador: {type(e).__name__} -> {e}")
-        logging.error("Asegúrate de usar 127.0.0.1 en tu .env en lugar de localhost.")
-        return # Salimos del script si no podemos ni crear la base de datos
-
-    # FASE 2: INYECTAR TABLAS Y DATOS
-    logging.info("📦 Fase 2: Conectando a la base de datos 'vigamonitor'...")
+    # FASE 2: INYECTAR TABLAS Y DATOS (Fase 1 omitida porque Docker ya crea la BD)
+    logging.info("📦 Conectando a la base de datos 'vigamonitor'...")
     try:
         conn = await asyncpg.connect(dsn)
         
@@ -61,10 +29,8 @@ async def seed() -> None:
             # --- Tables ---
             logging.info("🏗️ Creando tablas...")
             
-            # --- SOLUCIÓN PARA POSTGRESQL 15+ ---
             await conn.execute("CREATE SCHEMA IF NOT EXISTS public")
             await conn.execute("SET search_path TO public")
-            # ------------------------------------
 
             await conn.execute("""
                 CREATE TABLE IF NOT EXISTS thresholds (
@@ -104,7 +70,6 @@ async def seed() -> None:
             """)
             logging.info("✓ Tabla: telemetry_readings")
 
-            # --- Vigas table (debe ir ANTES de agregar viga_id FK) ---
             await conn.execute("""
                 CREATE TABLE IF NOT EXISTS vigas (
                     viga_id    SERIAL PRIMARY KEY,
@@ -115,34 +80,29 @@ async def seed() -> None:
             """)
             logging.info("✓ Tabla: vigas")
 
-            # Add viga_id column + FK (solo si no existe)
             await conn.execute("""
                 ALTER TABLE telemetry_readings
                 ADD COLUMN IF NOT EXISTS viga_id INTEGER REFERENCES vigas(viga_id)
             """)
             logging.info("✓ Columna viga_id + FK agregada")
 
-            # Add vibration detail columns (solo si no existen)
             for col in ["ax", "ay", "az", "adx", "ady", "adz", "aver", "gx", "gy", "gz", "temp"]:
                 await conn.execute(
                     f'ALTER TABLE telemetry_readings ADD COLUMN IF NOT EXISTS "{col}" DOUBLE PRECISION'
                 )
-            # evento es INTEGER
             await conn.execute(
                 'ALTER TABLE telemetry_readings ADD COLUMN IF NOT EXISTS "evento" INTEGER'
             )
             logging.info("✓ Columnas de vibración detallada agregadas")
 
-            # --- Hypertable ---
             try:
                 await conn.execute(
                     "SELECT create_hypertable('telemetry_readings', 'time', if_not_exists => TRUE)"
                 )
                 logging.info("✓ Convertida a hypertable")
             except Exception:
-                logging.info("- Conversión a Hypertable omitida (TimescaleDB no disponible)")
+                logging.info("- Conversión a Hypertable omitida")
 
-            # --- Indexes ---
             logging.info("📊 Creando índices...")
             await conn.execute("""
                 CREATE INDEX IF NOT EXISTS idx_readings_sensor_tipo_time
@@ -158,7 +118,6 @@ async def seed() -> None:
             """)
             logging.info("✓ Índices creados")
 
-            # --- Seed data ---
             logging.info("🌱 Inyectando datos semilla...")
             await conn.execute("""
                 INSERT INTO thresholds (sensor_tipo, alert_valor, critical_valor)
@@ -178,7 +137,6 @@ async def seed() -> None:
             """)
             logging.info("✓ Sensores inyectados")
 
-            # --- Seed vigas ---
             await conn.execute("""
                 INSERT INTO vigas (nombre, ubicacion)
                 VALUES
