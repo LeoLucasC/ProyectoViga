@@ -17,7 +17,7 @@ const char SENSOR_ID[] = "MPU_IZQUIERDO";
 // =====================================================
 const char* WIFI_SSID = "LEOYJHON";
 const char* WIFI_PASSWORD = "1371928L";
-const char* API_URL = "http://192.168.1.102:8000/api/telemetry";
+const char* API_URL = "http://hsiatx2025.cloud/api/telemetry";
 const char* SENSOR_TIPO = "vibracion";
 const char* UNIDAD = "m/s²";
 const unsigned long INTERVALO_ENVIO_MS = 1000; // cada 1 segundo
