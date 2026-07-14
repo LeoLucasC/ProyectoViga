@@ -328,7 +328,7 @@ export function BridgeViewer3D({
             <Box size={14} className="text-white" />
           </div>
           <div>
-            <h3 className="text-white text-sm font-semibold leading-tight">Modelo 3D del Puente</h3>
+            <h3 className="text-white text-sm font-semibold leading-tight">Modelo 3D de una Viga no confinada</h3>
             <p className="text-surface-500 text-[11px] leading-tight">Vista previa digital</p>
           </div>
         </div>
