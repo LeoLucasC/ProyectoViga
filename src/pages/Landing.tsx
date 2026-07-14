@@ -617,7 +617,7 @@ export default function App({ onNavigate }: AppProps) {
                 name: "Santillan Verde Yordin Jamer",
                 role: "Estudiante de Ingeniería Civil",
                 desc: "Responsable del diseño y montaje del sistema de sensores sobre la viga, calibración del MPU9250 y VL53L01X, y análisis de datos estructurales.",
-                image: "/foto1.jpg",
+                image: "/jumer.jpeg",
                 bgImage: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=600&h=600&fit=crop",
                 tags: ["MPU9250", "VL53L01X", "Estructuras"],
               },

@@ -8,8 +8,8 @@
 // CONFIGURACIÓN WiFi
 // ======================================================
 
-const char* WIFI_SSID = "LEOYJHON";
-const char* WIFI_PASSWORD = "1371928L";
+const char* WIFI_SSID = "GRUPO5";
+const char* WIFI_PASSWORD = "123456789";
 
 // ======================================================
 // CONFIGURACIÓN DEL BACKEND

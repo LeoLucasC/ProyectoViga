@@ -15,8 +15,8 @@ const char SENSOR_ID[] = "MPU_IZQUIERDO";
 // =====================================================
 // CONFIGURACIÓN WiFi Y BACKEND
 // =====================================================
-const char* WIFI_SSID = "LEOYJHON";
-const char* WIFI_PASSWORD = "1371928L";
+const char* WIFI_SSID = "GRUPO5";
+const char* WIFI_PASSWORD = "123456789";
 const char* API_URL = "http://hsiatx2025.cloud/api/telemetry";
 const char* SENSOR_TIPO = "vibracion";
 const char* UNIDAD = "m/s²";
