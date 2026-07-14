@@ -624,7 +624,7 @@ export default function App({ onNavigate }: AppProps) {
               {
                 name: "García Moreno Josep Junior",
                 role: "Estudiante de Ingeniería Civil",
-                desc: "Encargada de la integración del ESP32, comunicación WiFi, transmisión de datos a la nube y desarrollo del pipeline de telemetría.",
+                desc: "Líder del desarrollo del dashboard web, visualización 3D de la viga, gráficos en tiempo real y experiencia de usuario.",
                 image: "/foto2.jpeg",
                 bgImage: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=600&h=600&fit=crop",
                 tags: ["ESP32", "Telemetría", "IoT"],
@@ -632,7 +632,7 @@ export default function App({ onNavigate }: AppProps) {
               {
                 name: "Marcos Paulino Jeanz Miller",
                 role: "Estudiante de Ingeniería Civil",
-                desc: "Líder del desarrollo del dashboard web, visualización 3D de la viga, gráficos en tiempo real y experiencia de usuario.",
+                desc: "Encargado de la integración del ESP32, comunicación WiFi, transmisión de datos a la nube y desarrollo del pipeline de telemetría.",
                 image: "/foto3.jpeg",
                 bgImage: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=600&h=600&fit=crop",
                 tags: ["Dashboard", "3D", "UX"],
