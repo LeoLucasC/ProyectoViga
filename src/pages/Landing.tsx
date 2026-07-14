@@ -19,7 +19,7 @@ const characteristics = [
         <line x1="21" y1="12" x2="23" y2="12" />
       </svg>
     ),
-    image: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=600&h=400&fit=crop",
+    image: "/sensor-mpu9250.jpg",
   },
   {
     title: "Sensor VL53L01X",
@@ -31,7 +31,7 @@ const characteristics = [
         <circle cx="5" cy="12" r="1.5" fill="currentColor" stroke="none" />
       </svg>
     ),
-    image: "https://images.unsplash.com/photo-1558655146-9f40138edfeb?w=600&h=400&fit=crop",
+    image: "/sensor-vl53l01x.jpg",
   },
   {
     title: "Módulo ESP32",
@@ -45,7 +45,7 @@ const characteristics = [
         <path d="M3 12l4 4" />
       </svg>
     ),
-    image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600&h=400&fit=crop",
+    image: "/modulo-esp32.jpg",
   },
   {
     title: "Monitoreo en Tiempo Real",
@@ -55,7 +55,7 @@ const characteristics = [
         <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
       </svg>
     ),
-    image: "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=600&h=400&fit=crop",
+    image: "/monitoreo-en-tiempo-real.jpg",
   },
   {
     title: "Alertas Inteligentes",
@@ -66,7 +66,7 @@ const characteristics = [
         <path d="M13.73 21a2 2 0 0 1-3.46 0" />
       </svg>
     ),
-    image: "https://images.unsplash.com/photo-1558655146-9f40138edfeb?w=600&h=400&fit=crop",
+    image: "/alertas-inteligentes.jpg",
   },
   {
     title: "Dashboard Interactivo",
@@ -79,7 +79,7 @@ const characteristics = [
         <rect x="3" y="14" width="7" height="7" />
       </svg>
     ),
-    image: "https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=600&h=400&fit=crop",
+    image: "/dashboard-interactivo.jpg",
   },
 ];
 
@@ -91,7 +91,7 @@ const highlights = [
       <circle cx="12" cy="12" r="11" />
     </svg>
   )},
-  { value: "1", suffix: "", label: "ESP32 Central", icon: (
+  { value: "3", suffix: "", label: "ESP32 Central", icon: (
     <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <path d="M5 12h14" />
       <path d="M12 5l7 7-7 7" />
@@ -518,33 +518,28 @@ export default function App({ onNavigate }: AppProps) {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             {characteristics.map((s, i) => (
               <div
                 key={i}
-                className="group relative rounded-2xl overflow-hidden 
+                className="flex rounded-2xl overflow-hidden 
                   bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] 
                   hover:border-[#2563eb]/25 hover:bg-white/[0.05]
                   shadow-[0_4px_20px_rgba(0,0,0,0.15)] hover:shadow-[0_8px_40px_rgba(37,99,235,0.08)]
                   transition-all duration-500 hover:-translate-y-2"
               >
-                {/* Background image on hover */}
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700">
-                  <img src={s.image} alt="" className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-[#060d1a]/80 backdrop-blur-sm" />
+                <div className="w-[140px] shrink-0 overflow-hidden">
+                  <img 
+                    src={s.image} 
+                    alt={s.title}
+                    className="w-full h-full object-cover" 
+                  />
                 </div>
-
-                <div className="relative z-10 p-7">
-                  <div className="text-3xl mb-4 group-hover:scale-110 transition-transform duration-300">{s.icon}</div>
-                  <div className="w-8 h-0.5 rounded-full bg-gradient-to-r from-[#2563eb] to-[#3B82F6] mb-3 
-                    group-hover:w-12 transition-all duration-300" />
-                  <h3 className="text-xl font-bold text-white mb-2 group-hover:text-[#2563eb] transition-colors">
-                    {s.title}
-                  </h3>
-                  <p className="text-sm text-white/30 group-hover:text-white/50 transition-colors">{s.desc}</p>
-                </div>
-                <div className="absolute top-0 right-0 w-20 h-20 overflow-hidden opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                  <div className="absolute top-0 right-0 w-0 h-0 border-t-[50px] border-r-[50px] border-t-[#2563eb]/20 border-r-transparent" />
+                <div className="flex-1 p-5">
+                  <div className="text-2xl mb-2">{s.icon}</div>
+                  <div className="w-8 h-0.5 rounded-full bg-gradient-to-r from-[#2563eb] to-[#3B82F6] mb-2" />
+                  <h3 className="text-lg font-bold text-white mb-1">{s.title}</h3>
+                  <p className="text-sm text-white/30">{s.desc}</p>
                 </div>
               </div>
             ))}
@@ -602,7 +597,7 @@ export default function App({ onNavigate }: AppProps) {
             </div>
             <h2 className="text-4xl sm:text-5xl font-bold mb-4">
               <span className="bg-gradient-to-r from-white via-[#2563eb]/70 to-white/60 bg-clip-text text-transparent">
-                Nuestro Equipo
+                Estudiantes de Ingeniería Civil
               </span>
             </h2>
             <p className="max-w-xl mx-auto text-white/30 text-sm">
@@ -799,7 +794,7 @@ export default function App({ onNavigate }: AppProps) {
       <section id="contacto" className="relative py-32 px-5">
         <div className="absolute inset-0">
           <img
-            src="https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=1920&h=800&fit=crop"
+            src="https://tudiariohuanuco.pe/wp-content/uploads/2025/01/unheval-cero-papel.jpg"
             alt=""
             className="w-full h-full object-cover"
           />
@@ -826,37 +821,22 @@ export default function App({ onNavigate }: AppProps) {
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <a
-              href="mailto:proyecto@viga.pe"
+            <button
+              onClick={() => onNavigate("login")}
               className="group relative px-10 py-4 text-base font-semibold rounded-2xl 
                 bg-gradient-to-r from-[#2563eb] to-[#1D4ED8] text-[#060d1a] 
                 shadow-2xl shadow-[#2563eb]/25 hover:shadow-[#2563eb]/40 
                 active:scale-[0.97] transition-all duration-300 overflow-hidden"
             >
               <span className="relative z-10 flex items-center gap-2">
-                proyecto@viga.pe
+                VAYAMOS A LAS PRUEBAS
                 <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                 </svg>
               </span>
               <div className="absolute inset-0 bg-gradient-to-r from-[#3B82F6] to-[#2563eb] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-            </a>
-            <a
-              href="#"
-              className="group px-10 py-4 text-base font-medium rounded-2xl 
-                bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] 
-                text-white/60 hover:text-white hover:border-white/[0.15] 
-                hover:bg-white/[0.06] active:scale-[0.97] transition-all duration-300
-                shadow-[0_4px_20px_rgba(0,0,0,0.15)]"
-            >
-              <span className="flex items-center gap-2">
-                Ver demo
-                <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </span>
-            </a>
+            </button>
+           
           </div>
 
           <div className="mt-12 flex flex-wrap items-center justify-center gap-6 text-[11px] text-white/20">
