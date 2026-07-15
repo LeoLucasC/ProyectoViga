@@ -611,26 +611,26 @@ export default function App({ onNavigate }: AppProps) {
               {
                 name: "Santillan Verde Yordin Jamer",
                 role: "Estudiante de Ingeniería Civil",
-                desc: "Responsable del diseño y montaje del sistema de sensores sobre la viga, calibración del MPU9250 y VL53L01X, y análisis de datos estructurales.",
+                desc: "Participa en el diseño, ensamblaje e instalación del sistema de sensores implementado sobre la viga de ensayo. Su aporte se orienta a la integración física de los dispositivos de medición, la calibración preliminar de sensores y la verificación del montaje experimental. Cuenta con conocimientos en arquitectura electrónica básica y experiencia de apoyo en actividades de obra, lo que permite vincular el desarrollo tecnológico con condiciones reales de campo.",
                 image: "/jumer.jpeg",
                 bgImage: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=600&h=600&fit=crop",
-                tags: ["MPU9250", "VL53L01X", "Estructuras"],
+                tags: ["Sensores ", "Ensamblaje ", "Montaje Experimental"],
               },
               {
                 name: "García Moreno Josep Junior",
                 role: "Estudiante de Ingeniería Civil",
-                desc: "Líder del desarrollo del dashboard web, visualización 3D de la viga, gráficos en tiempo real y experiencia de usuario.",
+                desc: "Encargado del desarrollo del modelo de gemelo digital estructural de la viga, integrando herramientas como Abaqus, SAP2000 y MATLAB para el análisis numérico, la simulación estructural y la comparación de resultados. También participa en la modelación 3D mediante Blender para la visualización del prototipo en la plataforma web. Posee conocimientos en codificación, ofimática, fotogrametría con dron, modelación tridimensional en software ingenieril y apoyo técnico en obras.",
                 image: "/foto2.jpeg",
                 bgImage: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=600&h=600&fit=crop",
-                tags: ["ESP32", "Telemetría", "IoT"],
+                tags: ["Digital Twin", "Simulación Estructural", "Modelación 3D"],
               },
               {
                 name: "Marcos Paulino Jeanz Miller",
                 role: "Estudiante de Ingeniería Civil",
-                desc: "Encargado de la integración del ESP32, comunicación WiFi, transmisión de datos a la nube y desarrollo del pipeline de telemetría.",
+                desc: "Participa en la programación, configuración e instalación del sistema de sensores, así como en la modelación previa de los dispositivos antes de su ensamblaje físico. Su trabajo se enfoca en el acondicionamiento del sistema de adquisición de datos, la comunicación entre sensores y la validación operativa del monitoreo. Cuenta con conocimientos aplicados a entornos reales y experiencia de apoyo en actividades de obra.",
                 image: "/foto3.jpeg",
                 bgImage: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=600&h=600&fit=crop",
-                tags: ["Dashboard", "3D", "UX"],
+                tags: ["Programación", "Sensores", "Adquisición de Datos"],
               },
             ].map((m, i) => (
               <div
