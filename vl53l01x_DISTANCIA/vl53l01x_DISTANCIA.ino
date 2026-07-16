@@ -301,6 +301,18 @@ void calcularReferencia() {
 // ======================================================
 
 // ------------------------------------------------------
+// Variables globales para el último ciclo de medición
+// (se actualizan en loop() antes de enviar)
+// ------------------------------------------------------
+
+float ultimaDistanciaRaw = NAN;
+float ultimaDistanciaCorregida = NAN;
+float ultimaDistanciaMedianaRaw = NAN;
+float ultimaDistanciaMedianaCorregida = NAN;
+float ultimaDeflexionRaw = NAN;
+float ultimaDeflexionFiltrada = NAN;
+
+// ------------------------------------------------------
 // Enviar deflexión al backend vía HTTP
 // ------------------------------------------------------
 
@@ -315,11 +327,27 @@ void enviarDeflexion(float deflexion) {
   http.begin(API_URL);
   http.addHeader("Content-Type", "application/json");
 
-  StaticJsonDocument<256> doc;
+  StaticJsonDocument<512> doc;
   doc["sensor_id"] = SENSOR_ID;
   doc["sensor_tipo"] = SENSOR_TIPO;
   doc["valor"] = round(deflexion * 100.0) / 100.0;
   doc["unidad"] = UNIDAD;
+
+  // Parámetros completos del sensor de distancia
+  if (!isnan(ultimaDistanciaRaw))
+    doc["distancia_raw"] = round(ultimaDistanciaRaw * 100.0) / 100.0;
+  if (!isnan(ultimaDistanciaCorregida))
+    doc["distancia_corregida"] = round(ultimaDistanciaCorregida * 100.0) / 100.0;
+  if (!isnan(ultimaDistanciaMedianaRaw))
+    doc["distancia_mediana_raw"] = round(ultimaDistanciaMedianaRaw * 100.0) / 100.0;
+  if (!isnan(ultimaDistanciaMedianaCorregida))
+    doc["distancia_mediana_corregida"] = round(ultimaDistanciaMedianaCorregida * 100.0) / 100.0;
+  if (!isnan(ultimaDeflexionRaw))
+    doc["deflexion_raw"] = round(ultimaDeflexionRaw * 100.0) / 100.0;
+  if (!isnan(ultimaDeflexionFiltrada))
+    doc["deflexion_filtrada"] = round(ultimaDeflexionFiltrada * 100.0) / 100.0;
+  if (referenciaCorregida > 0.01f)
+    doc["referencia_mm"] = round(referenciaCorregida * 100.0) / 100.0;
 
   String body;
   serializeJson(doc, body);
@@ -508,15 +536,24 @@ void loop() {
 
     /*
        Si la viga baja hacia el sensor,
-       la distancia disminuye y la deflexión queda positiva.
+       la distancia disminuye → deflexión negativa (resta).
+       Si la viga se aleja del sensor,
+       la distancia aumenta → deflexión positiva (suma).
     */
 
     deflexionRaw =
-        referenciaCorregida - distanciaCorregida;
+        distanciaCorregida - referenciaCorregida;
 
     deflexionFiltrada =
-        referenciaCorregida -
-        distanciaMedianaCorregida;
+        distanciaMedianaCorregida - referenciaCorregida;
+
+    // Guardar para el envío al backend
+    ultimaDistanciaRaw = (float)distanciaRaw;
+    ultimaDistanciaCorregida = distanciaCorregida;
+    ultimaDistanciaMedianaRaw = distanciaMedianaRaw;
+    ultimaDistanciaMedianaCorregida = distanciaMedianaCorregida;
+    ultimaDeflexionRaw = deflexionRaw;
+    ultimaDeflexionFiltrada = deflexionFiltrada;
   }
 
   // ── Envío periódico al backend ──

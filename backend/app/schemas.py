@@ -12,6 +12,14 @@ class TelemetryReading(BaseModel):
     valor: float
     unidad: str = "mm"
     viga_id: int | None = None
+    # Parámetros completos de distancia (VL53L1X) — opcionales
+    distancia_raw: float | None = None
+    distancia_corregida: float | None = None
+    distancia_mediana_raw: float | None = None
+    distancia_mediana_corregida: float | None = None
+    deflexion_raw: float | None = None
+    deflexion_filtrada: float | None = None
+    referencia_mm: float | None = None
     # Parámetros completos de vibración (MPU9250) — opcionales
     ax: float | None = None
     ay: float | None = None

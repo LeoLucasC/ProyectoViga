@@ -37,6 +37,14 @@ export interface HistoryPoint {
   sensor_id: string;
   valor: number;
   sensor_tipo: "distancia" | "vibracion";
+  // Parámetros detallados de distancia (opcionales)
+  distancia_raw?: number;
+  distancia_corregida?: number;
+  distancia_mediana_raw?: number;
+  distancia_mediana_corregida?: number;
+  deflexion_raw?: number;
+  deflexion_filtrada?: number;
+  referencia_mm?: number;
   // Parámetros detallados de vibración (opcionales)
   ax?: number;
   ay?: number;

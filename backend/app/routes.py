@@ -77,6 +77,13 @@ async def history(
             "valor": r["valor"],
             "sensor_tipo": r["sensor_tipo"],
         }
+        # Incluir parámetros detallados de distancia si existen
+        for field in ["distancia_raw","distancia_corregida","distancia_mediana_raw",
+                       "distancia_mediana_corregida","deflexion_raw","deflexion_filtrada",
+                       "referencia_mm"]:
+            val = r.get(field)
+            if val is not None:
+                point[field] = val
         # Incluir parámetros detallados de vibración si existen
         for field in ["ax","ay","az","adx","ady","adz","aver","gx","gy","gz","temp","evento"]:
             val = r.get(field)
@@ -120,6 +127,13 @@ async def post_telemetry(reading: TelemetryReading):
             unidad=reading.unidad,
             timestamp=reading.timestamp,
             viga_id=reading.viga_id,
+            distancia_raw=reading.distancia_raw,
+            distancia_corregida=reading.distancia_corregida,
+            distancia_mediana_raw=reading.distancia_mediana_raw,
+            distancia_mediana_corregida=reading.distancia_mediana_corregida,
+            deflexion_raw=reading.deflexion_raw,
+            deflexion_filtrada=reading.deflexion_filtrada,
+            referencia_mm=reading.referencia_mm,
             ax=reading.ax, ay=reading.ay, az=reading.az,
             adx=reading.adx, ady=reading.ady, adz=reading.adz, aver=reading.aver,
             gx=reading.gx, gy=reading.gy, gz=reading.gz,
@@ -152,6 +166,13 @@ async def post_telemetry_batch(batch: BatchTelemetry):
                 unidad=reading.unidad,
                 timestamp=reading.timestamp,
                 viga_id=reading.viga_id,
+                distancia_raw=reading.distancia_raw,
+                distancia_corregida=reading.distancia_corregida,
+                distancia_mediana_raw=reading.distancia_mediana_raw,
+                distancia_mediana_corregida=reading.distancia_mediana_corregida,
+                deflexion_raw=reading.deflexion_raw,
+                deflexion_filtrada=reading.deflexion_filtrada,
+                referencia_mm=reading.referencia_mm,
                 ax=reading.ax, ay=reading.ay, az=reading.az,
                 adx=reading.adx, ady=reading.ady, adz=reading.adz, aver=reading.aver,
                 gx=reading.gx, gy=reading.gy, gz=reading.gz,

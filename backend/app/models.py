@@ -112,6 +112,13 @@ async def insert_reading(
     unidad: str,
     timestamp: datetime | None = None,
     viga_id: int | None = None,
+    distancia_raw: float | None = None,
+    distancia_corregida: float | None = None,
+    distancia_mediana_raw: float | None = None,
+    distancia_mediana_corregida: float | None = None,
+    deflexion_raw: float | None = None,
+    deflexion_filtrada: float | None = None,
+    referencia_mm: float | None = None,
     ax: float | None = None,
     ay: float | None = None,
     az: float | None = None,
@@ -134,13 +141,20 @@ async def insert_reading(
         """
         INSERT INTO telemetry_readings
             (time, sensor_id, sensor_tipo, valor, unidad, viga_id,
+             distancia_raw, distancia_corregida, distancia_mediana_raw,
+             distancia_mediana_corregida, deflexion_raw, deflexion_filtrada,
+             referencia_mm,
              ax, ay, az, adx, ady, adz, aver,
              gx, gy, gz, temp, evento)
         VALUES ($1, $2, $3, $4, $5, $6,
                 $7, $8, $9, $10, $11, $12, $13,
-                $14, $15, $16, $17, $18)
+                $14, $15, $16, $17, $18, $19, $20,
+                $21, $22, $23, $24, $25)
         """,
         ts, sensor_id, sensor_tipo, valor, unidad, viga_id,
+        distancia_raw, distancia_corregida, distancia_mediana_raw,
+        distancia_mediana_corregida, deflexion_raw, deflexion_filtrada,
+        referencia_mm,
         ax, ay, az, adx, ady, adz, aver,
         gx, gy, gz, temp, evento,
     )
@@ -168,6 +182,9 @@ async def get_history(
     since: datetime | None = None,
 ) -> list[dict]:
     query = """SELECT time, sensor_id, sensor_tipo, valor, unidad, viga_id,
+                      distancia_raw, distancia_corregida, distancia_mediana_raw,
+                      distancia_mediana_corregida, deflexion_raw, deflexion_filtrada,
+                      referencia_mm,
                       ax, ay, az, adx, ady, adz, aver,
                       gx, gy, gz, temp, evento
                FROM telemetry_readings WHERE 1=1"""

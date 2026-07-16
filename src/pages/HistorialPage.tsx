@@ -91,6 +91,9 @@ export function HistorialPage() {
 
     const header = [
       "timestamp", "sensor_id", "sensor_tipo", "valor",
+      "distancia_raw (mm)", "distancia_corregida (mm)",
+      "distancia_mediana_raw (mm)", "distancia_mediana_corregida (mm)",
+      "deflexion_raw (mm)", "deflexion_filtrada (mm)", "referencia (mm)",
       "ax (m/s²)", "ay (m/s²)", "az (m/s²)",
       "adx (m/s²)", "ady (m/s²)", "adz (m/s²)", "aver (m/s²)",
       "gx (rad/s)", "gy (rad/s)", "gz (rad/s)",
@@ -103,6 +106,9 @@ export function HistorialPage() {
         p.sensor_id,
         p.sensor_tipo,
         p.valor ?? "",
+        p.distancia_raw ?? "", p.distancia_corregida ?? "",
+        p.distancia_mediana_raw ?? "", p.distancia_mediana_corregida ?? "",
+        p.deflexion_raw ?? "", p.deflexion_filtrada ?? "", p.referencia_mm ?? "",
         p.ax ?? "", p.ay ?? "", p.az ?? "",
         p.adx ?? "", p.ady ?? "", p.adz ?? "", p.aver ?? "",
         p.gx ?? "", p.gy ?? "", p.gz ?? "",

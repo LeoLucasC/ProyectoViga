@@ -1,6 +1,7 @@
 # Taste (Continuously Learned by [CommandCode][cmd])
 
 [cmd]: https://commandcode.ai/
+
 
 # project
 - Delete sensors by always cascading to delete all associated telemetry readings (force always). Confidence: 0.65
