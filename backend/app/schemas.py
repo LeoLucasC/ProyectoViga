@@ -67,11 +67,13 @@ class SensorCreate(BaseModel):
     nombre: str = Field(max_length=200)
     ubicacion: str = Field(max_length=200)
     sensor_id: str | None = Field(None, max_length=100)
+    viga_id: int | None = None
 
 
 class SensorUpdate(BaseModel):
     nombre: str | None = Field(None, max_length=200)
     ubicacion: str | None = Field(None, max_length=200)
+    viga_id: int | None = None
 
 
 class SensorResponse(BaseModel):
@@ -81,6 +83,7 @@ class SensorResponse(BaseModel):
     ubicacion: str | None
     activo: bool
     created_at: datetime
+    viga_id: int | None = None
     online: bool = False
     reading_status: Literal["normal", "alert", "critical"] | None = None
     latest_valor: float | None = None

@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { X } from "lucide-react";
-import { updateSensor } from "../services/api";
-import type { SensorResponse } from "../types/telemetry";
+import { updateSensor, getVigas } from "../services/api";
+import type { SensorResponse, Viga } from "../types/telemetry";
 
 interface Props {
   sensor: SensorResponse;
@@ -12,8 +12,16 @@ interface Props {
 export function EditSensorModal({ sensor, onClose, onUpdated }: Props) {
   const [nombre, setNombre] = useState(sensor.nombre || "");
   const [ubicacion, setUbicacion] = useState(sensor.ubicacion || "");
+  const [vigaId, setVigaId] = useState<number | "">(sensor.viga_id ?? "");
+  const [vigas, setVigas] = useState<Viga[]>([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    getVigas()
+      .then((v) => setVigas(v))
+      .catch(() => {});
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,7 +32,7 @@ export function EditSensorModal({ sensor, onClose, onUpdated }: Props) {
     setLoading(true);
     setError("");
     try {
-      await updateSensor(sensor.sensor_id, { nombre: nombre.trim(), ubicacion: ubicacion.trim() });
+      await updateSensor(sensor.sensor_id, { nombre: nombre.trim(), ubicacion: ubicacion.trim(), viga_id: vigaId !== "" ? vigaId : null });
       onUpdated();
       onClose();
     } catch (err: any) {
@@ -68,6 +76,20 @@ export function EditSensorModal({ sensor, onClose, onUpdated }: Props) {
               onChange={(e) => setUbicacion(e.target.value)}
               className="w-full bg-surface-800 border border-surface-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-primary-500"
             />
+          </div>
+
+          <div>
+            <label className="block text-xs text-surface-400 mb-1">Asignar a Viga</label>
+            <select
+              value={vigaId}
+              onChange={(e) => setVigaId(e.target.value ? Number(e.target.value) : "")}
+              className="w-full bg-surface-800 border border-surface-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-primary-500"
+            >
+              <option value="">Sin asignar</option>
+              {vigas.map((v) => (
+                <option key={v.viga_id} value={v.viga_id}>{v.nombre}</option>
+              ))}
+            </select>
           </div>
 
           {error && <p className="text-danger-400 text-xs">{error}</p>}

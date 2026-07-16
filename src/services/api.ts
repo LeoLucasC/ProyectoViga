@@ -23,6 +23,8 @@ export const updateSensor = (sensorId: string, data: SensorUpdate) =>
   request<SensorResponse>(`/sensors/${sensorId}`, { method: "PUT", body: JSON.stringify(data) });
 export const toggleSensor = (sensorId: string) =>
   request<SensorResponse>(`/sensors/${sensorId}/toggle`, { method: "PATCH" });
+export const assignSensorViga = (sensorId: string, vigaId: number | null) =>
+  request<{ status: string; sensor_id: string; viga_id: number | null }>(`/sensors/${sensorId}/viga?${new URLSearchParams(vigaId !== null ? { viga_id: String(vigaId) } : {})}`, { method: "PATCH" });
 export const deleteSensor = (sensorId: string) =>
   request<{ status: string; message: string }>(`/sensors/${sensorId}`, { method: "DELETE" });
 

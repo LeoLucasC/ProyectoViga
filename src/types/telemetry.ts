@@ -44,6 +44,7 @@ export interface SensorResponse {
   ubicacion: string | null;
   activo: boolean;
   created_at: string;
+  viga_id: number | null;
   online: boolean;
   reading_status: "normal" | "alert" | "critical" | null;
   latest_valor: number | null;
@@ -56,11 +57,13 @@ export interface SensorCreate {
   nombre: string;
   ubicacion: string;
   sensor_id?: string;
+  viga_id?: number | null;
 }
 
 export interface SensorUpdate {
   nombre?: string;
   ubicacion?: string;
+  viga_id?: number | null;
 }
 
 export interface Threshold {

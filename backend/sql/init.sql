@@ -23,22 +23,23 @@ CREATE TABLE IF NOT EXISTS thresholds (
     CONSTRAINT chk_thresholds CHECK (alert_valor < critical_valor)
 );
 
--- 6. Sensors registry
+-- 6. Vigas registry (beams) — must be before sensors
+CREATE TABLE IF NOT EXISTS vigas (
+    viga_id    SERIAL PRIMARY KEY,
+    nombre     VARCHAR(200) NOT NULL,
+    ubicacion  VARCHAR(200) NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 7. Sensors registry
 CREATE TABLE IF NOT EXISTS sensors (
     sensor_id   VARCHAR(100) PRIMARY KEY,
     sensor_tipo VARCHAR(50) NOT NULL REFERENCES thresholds(sensor_tipo),
     nombre      VARCHAR(200),
     ubicacion   VARCHAR(200),
     activo      BOOLEAN DEFAULT TRUE,
+    viga_id     INTEGER REFERENCES vigas(viga_id),
     created_at  TIMESTAMPTZ DEFAULT NOW()
-);
-
--- 7. Vigas registry (beams)
-CREATE TABLE IF NOT EXISTS vigas (
-    viga_id    SERIAL PRIMARY KEY,
-    nombre     VARCHAR(200) NOT NULL,
-    ubicacion  VARCHAR(200) NOT NULL,
-    created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- 8. Users table
@@ -104,14 +105,14 @@ VALUES
     ('vibracion', 0.8, 1.5)
 ON CONFLICT (sensor_tipo) DO NOTHING;
 
-INSERT INTO sensors (sensor_id, sensor_tipo, nombre, ubicacion)
-VALUES
-    ('bridge-01', 'distancia', 'Sensor de Deflexión A', 'Centro del vano'),
-    ('bridge-02', 'vibracion', 'Sensor de Vibración B', 'Cuarto del vano')
-ON CONFLICT (sensor_id) DO NOTHING;
-
 INSERT INTO vigas (nombre, ubicacion)
 VALUES
     ('Viga Principal Puente 1', 'Tramo central - Río Bravo'),
     ('Viga Secundaria Acceso Norte', 'Acceso norte - Estribo A')
 ON CONFLICT (viga_id) DO NOTHING;
+
+INSERT INTO sensors (sensor_id, sensor_tipo, nombre, ubicacion, viga_id)
+VALUES
+    ('bridge-01', 'distancia', 'Sensor de Deflexión A', 'Centro del vano', 1),
+    ('bridge-02', 'vibracion', 'Sensor de Vibración B', 'Cuarto del vano', 2)
+ON CONFLICT (sensor_id) DO NOTHING;

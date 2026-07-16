@@ -44,12 +44,23 @@ async def seed() -> None:
             logging.info("✓ Tabla: thresholds")
 
             await conn.execute("""
+                CREATE TABLE IF NOT EXISTS vigas (
+                    viga_id    SERIAL PRIMARY KEY,
+                    nombre     VARCHAR(200) NOT NULL,
+                    ubicacion  VARCHAR(200) NOT NULL,
+                    created_at TIMESTAMPTZ DEFAULT NOW()
+                )
+            """)
+            logging.info("✓ Tabla: vigas")
+
+            await conn.execute("""
                 CREATE TABLE IF NOT EXISTS sensors (
                     sensor_id   VARCHAR(100) PRIMARY KEY,
                     sensor_tipo VARCHAR(50) NOT NULL REFERENCES thresholds(sensor_tipo),
                     nombre      VARCHAR(200),
                     ubicacion   VARCHAR(200),
                     activo      BOOLEAN DEFAULT TRUE,
+                    viga_id     INTEGER REFERENCES vigas(viga_id),
                     created_at  TIMESTAMPTZ DEFAULT NOW()
                 )
             """)
@@ -71,20 +82,16 @@ async def seed() -> None:
             logging.info("✓ Tabla: telemetry_readings")
 
             await conn.execute("""
-                CREATE TABLE IF NOT EXISTS vigas (
-                    viga_id    SERIAL PRIMARY KEY,
-                    nombre     VARCHAR(200) NOT NULL,
-                    ubicacion  VARCHAR(200) NOT NULL,
-                    created_at TIMESTAMPTZ DEFAULT NOW()
-                )
-            """)
-            logging.info("✓ Tabla: vigas")
-
-            await conn.execute("""
                 ALTER TABLE telemetry_readings
                 ADD COLUMN IF NOT EXISTS viga_id INTEGER REFERENCES vigas(viga_id)
             """)
             logging.info("✓ Columna viga_id + FK agregada")
+
+            await conn.execute("""
+                ALTER TABLE sensors
+                ADD COLUMN IF NOT EXISTS viga_id INTEGER REFERENCES vigas(viga_id)
+            """)
+            logging.info("✓ Columna sensors.viga_id + FK agregada")
 
             for col in ["ax", "ay", "az", "adx", "ady", "adz", "aver", "gx", "gy", "gz", "temp"]:
                 await conn.execute(
@@ -129,15 +136,6 @@ async def seed() -> None:
             logging.info("✓ Thresholds inyectados")
 
             await conn.execute("""
-                INSERT INTO sensors (sensor_id, sensor_tipo, nombre, ubicacion)
-                VALUES
-                    ('bridge-01', 'distancia', 'Sensor de Deflexión A', 'Centro del vano'),
-                    ('bridge-02', 'vibracion', 'Sensor de Vibración B', 'Cuarto del vano')
-                ON CONFLICT (sensor_id) DO NOTHING
-            """)
-            logging.info("✓ Sensores inyectados")
-
-            await conn.execute("""
                 INSERT INTO vigas (nombre, ubicacion)
                 VALUES
                     ('Viga Principal Puente 1', 'Tramo central - Río Bravo'),
@@ -145,6 +143,15 @@ async def seed() -> None:
                 ON CONFLICT (viga_id) DO NOTHING
             """)
             logging.info("✓ Vigas inyectadas")
+
+            await conn.execute("""
+                INSERT INTO sensors (sensor_id, sensor_tipo, nombre, ubicacion, viga_id)
+                VALUES
+                    ('bridge-01', 'distancia', 'Sensor de Deflexión A', 'Centro del vano', 1),
+                    ('bridge-02', 'vibracion', 'Sensor de Vibración B', 'Cuarto del vano', 2)
+                ON CONFLICT (sensor_id) DO NOTHING
+            """)
+            logging.info("✓ Sensores inyectados")
 
             logging.info("✅ ¡Base de datos preparada y sembrada con éxito!")
 

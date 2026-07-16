@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Pencil, Power, PowerOff, Activity, Trash2 } from "lucide-react";
+import { Pencil, Power, PowerOff, Activity, Trash2, Building2 } from "lucide-react";
 import type { SensorResponse } from "../types/telemetry";
 
 interface Props {
@@ -61,10 +61,16 @@ export function SensorCard({ sensor, onToggle, onEdit, onDelete }: Props) {
         </span>
       </div>
 
-      <p className="text-surface-400 text-xs mb-2">
+      <p className="text-surface-400 text-xs mb-1">
         <Activity size={12} className="inline mr-1" />
         {sensor.ubicacion || "Sin ubicación"}
       </p>
+      {sensor.viga_id && (
+        <p className="text-surface-500 text-xs mb-2">
+          <Building2 size={12} className="inline mr-1" />
+          Viga #{sensor.viga_id}
+        </p>
+      )}
 
       <div className="border-t border-surface-800 pt-3 mt-3 space-y-1">
         <div className="flex justify-between text-xs">

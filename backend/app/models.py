@@ -104,6 +104,23 @@ async def ensure_sensor_exists(conn: asyncpg.Connection, sensor_id: str, sensor_
         )
 
 
+async def get_sensor_viga_id(conn: asyncpg.Connection, sensor_id: str) -> int | None:
+    """Look up which viga a sensor is assigned to."""
+    return await conn.fetchval(
+        "SELECT viga_id FROM sensors WHERE sensor_id = $1", sensor_id
+    )
+
+
+async def update_sensor_viga(
+    conn: asyncpg.Connection, sensor_id: str, viga_id: int | None
+) -> None:
+    """Assign or unassign a sensor from a viga."""
+    await conn.execute(
+        "UPDATE sensors SET viga_id = $1 WHERE sensor_id = $2",
+        viga_id, sensor_id,
+    )
+
+
 async def insert_reading(
     conn: asyncpg.Connection,
     sensor_id: str,
@@ -135,6 +152,10 @@ async def insert_reading(
     ts = timestamp or datetime.now(timezone.utc)
     await ensure_sensor_exists(conn, sensor_id, sensor_tipo)
     if viga_id is None:
+        # Look up the sensor's assigned viga
+        viga_id = await get_sensor_viga_id(conn, sensor_id)
+    if viga_id is None:
+        # Fallback: first viga in the DB
         first = await conn.fetchval("SELECT viga_id FROM vigas ORDER BY viga_id LIMIT 1")
         viga_id = first
     await conn.execute(
@@ -249,7 +270,7 @@ async def get_all_sensors(conn: asyncpg.Connection) -> list[dict]:
         """
         SELECT
             s.sensor_id, s.sensor_tipo, s.nombre, s.ubicacion,
-            s.activo, s.created_at,
+            s.activo, s.created_at, s.viga_id,
             r.valor AS latest_valor, r.unidad AS latest_unidad, r.time AS latest_time
         FROM sensors s
         LEFT JOIN LATERAL (
@@ -269,7 +290,7 @@ async def get_sensor_by_id(
     conn: asyncpg.Connection, sensor_id: str
 ) -> dict | None:
     row = await conn.fetchrow(
-        "SELECT * FROM sensors WHERE sensor_id = $1", sensor_id
+        "SELECT sensor_id, sensor_tipo, nombre, ubicacion, activo, created_at, viga_id FROM sensors WHERE sensor_id = $1", sensor_id
     )
     return dict(row) if row else None
 
@@ -291,14 +312,15 @@ async def create_sensor(
     sensor_tipo: str,
     nombre: str,
     ubicacion: str,
+    viga_id: int | None = None,
 ) -> dict:
     row = await conn.fetchrow(
         """
-        INSERT INTO sensors (sensor_id, sensor_tipo, nombre, ubicacion)
-        VALUES ($1, $2, $3, $4)
+        INSERT INTO sensors (sensor_id, sensor_tipo, nombre, ubicacion, viga_id)
+        VALUES ($1, $2, $3, $4, $5)
         RETURNING *
         """,
-        sensor_id, sensor_tipo, nombre, ubicacion,
+        sensor_id, sensor_tipo, nombre, ubicacion, viga_id,
     )
     return dict(row)
 
@@ -308,6 +330,7 @@ async def update_sensor(
     sensor_id: str,
     nombre: str | None = None,
     ubicacion: str | None = None,
+    viga_id: int | None = None,
 ) -> dict | None:
     sets: list[str] = []
     params: list = []
@@ -320,6 +343,10 @@ async def update_sensor(
         idx += 1
         sets.append(f"ubicacion = ${idx}")
         params.append(ubicacion)
+    if viga_id is not None:
+        idx += 1
+        sets.append(f"viga_id = ${idx}")
+        params.append(viga_id)
     if not sets:
         return await get_sensor_by_id(conn, sensor_id)
     idx += 1

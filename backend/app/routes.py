@@ -331,6 +331,7 @@ async def list_sensors():
                 ubicacion=r.get("ubicacion"),
                 activo=r["activo"],
                 created_at=r["created_at"],
+                viga_id=r.get("viga_id"),
                 online=online,
                 reading_status=reading_status,
                 latest_valor=r.get("latest_valor"),
@@ -364,7 +365,8 @@ async def create_sensor(data: SensorCreate):
                 raise HTTPException(409, f"Sensor '{sensor_id}' ya existe")
 
         created = await models.create_sensor(
-            conn, sensor_id, data.sensor_tipo, data.nombre, data.ubicacion
+            conn, sensor_id, data.sensor_tipo, data.nombre, data.ubicacion,
+            viga_id=data.viga_id,
         )
 
         thresholds_raw = await models.get_thresholds(conn)
@@ -381,6 +383,7 @@ async def create_sensor(data: SensorCreate):
         ubicacion=created.get("ubicacion"),
         activo=created["activo"],
         created_at=created["created_at"],
+        viga_id=created.get("viga_id"),
         online=False,
         reading_status=None,
         latest_valor=None,
@@ -394,7 +397,7 @@ async def update_sensor(sensor_id: str, data: SensorUpdate):
     pool = await get_pool()
     async with pool.acquire() as conn:
         updated = await models.update_sensor(
-            conn, sensor_id, nombre=data.nombre, ubicacion=data.ubicacion
+            conn, sensor_id, nombre=data.nombre, ubicacion=data.ubicacion, viga_id=data.viga_id
         )
         if not updated:
             raise HTTPException(404, f"Sensor '{sensor_id}' no encontrado")
@@ -405,6 +408,7 @@ async def update_sensor(sensor_id: str, data: SensorUpdate):
         ubicacion=updated.get("ubicacion"),
         activo=updated["activo"],
         created_at=updated["created_at"],
+        viga_id=updated.get("viga_id"),
     )
 
 
@@ -422,7 +426,20 @@ async def toggle_sensor(sensor_id: str):
         ubicacion=toggled.get("ubicacion"),
         activo=toggled["activo"],
         created_at=toggled["created_at"],
+        viga_id=toggled.get("viga_id"),
     )
+
+
+@router.patch("/sensors/{sensor_id}/viga")
+async def assign_sensor_viga(sensor_id: str, viga_id: int | None = None):
+    """Assign or unassign a sensor from a viga."""
+    pool = await get_pool()
+    async with pool.acquire() as conn:
+        existing = await models.get_sensor_by_id(conn, sensor_id)
+        if not existing:
+            raise HTTPException(404, f"Sensor '{sensor_id}' no encontrado")
+        await models.update_sensor_viga(conn, sensor_id, viga_id)
+    return {"status": "ok", "sensor_id": sensor_id, "viga_id": viga_id}
 
 
 @router.delete("/sensors/{sensor_id}")
