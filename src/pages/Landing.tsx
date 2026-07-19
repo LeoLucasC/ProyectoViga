@@ -79,7 +79,7 @@ const characteristics = [
         <rect x="3" y="14" width="7" height="7" />
       </svg>
     ),
-    image: "/dashboard-interactivo.jpg",
+    image: "c",
   },
 ];
 
@@ -333,7 +333,7 @@ export default function App({ onNavigate }: AppProps) {
         <div className="absolute inset-0">
           <div className="absolute inset-0 bg-gradient-to-b from-[#060d1a]/70 via-[#060d1a]/50 to-[#060d1a]" />
           <img
-            src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1920&h=1080&fit=crop"
+            src="/fondo.jpg"
             alt=""
             className="w-full h-full object-cover animate-ken-burns"
           />
